@@ -3,6 +3,10 @@ name = "env-var"
 version = "0.1.0"
 authors = ["Jens Walter <jens@apimeister.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+keywords = ["environment","variables"]
+repository = "https://github.com/apimeister/env-var-macro-rs/"
+description = "Macros providing easier access to environment variables in rust."
 
 [dependencies]
 log = "0.4"

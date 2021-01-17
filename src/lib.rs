@@ -5,7 +5,7 @@
 /// 
 /// ## Examples
 ///
-/// ```rust
+/// ```ignore
 /// #[macro_use]
 /// extern crate env_var;
 ///

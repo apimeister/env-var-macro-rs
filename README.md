@@ -1,2 +1,2 @@
-# env-var-macro-rs
+# env-var
 Macros providing easier access to environment variables in rust.

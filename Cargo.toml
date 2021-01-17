@@ -1,0 +1,11 @@
+[package]
+name = "env-var"
+version = "0.1.0"
+authors = ["Jens Walter <jens@apimeister.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+
+[dev-dependencies]
+env_logger = "0.8"

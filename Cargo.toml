@@ -1,6 +1,6 @@
 [package]
 name = "env-var"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Jens Walter <jens@apimeister.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"

@@ -1,17 +1,37 @@
-
 #[macro_export]
 macro_rules! env_var {
   //require variables
   {required $key:expr} => {
     match std::env::var($key) {
       Ok(val) => val,
-      Err(_err) =>{ log::error!("missing environment variable: {}",$key);panic!();},
+      Err(_err) =>{
+        log::error!("missing environment variable: {}",$key);
+        panic!("missing environment variable");
+      },
     }
   };
   {required $key:expr, default: $default:expr} => {
     match std::env::var($key) {
       Ok(val) => val,
       Err(_err) => $default.to_string(),
+    }
+  };
+  {required $key:expr, msg: $msg:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val,
+      Err(_err) =>{
+        log::error!("{}",$msg);
+        panic!("missing environment variable");
+      },
+    }
+  };
+  {required $key:expr, default: $default:expr, msg: $msg:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val,
+      Err(_err) =>{
+        log::warn!("{}",$msg);
+        $default.to_string()
+      },
     }
   };
 
@@ -22,45 +42,133 @@ macro_rules! env_var {
       Err(_err) => "".to_string(),
     }
   };
-  {optional $key:expr, err_msg: $err_msg:expr} => {match_or_default($key,"")};
+  {optional $key:expr, default: $default:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val.to_string(),
+      Err(_err) => {
+        $default.to_string()
+      },
+    }
+  };
+  {optional $key:expr, msg: $msg:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val.to_string(),
+      Err(_err) => {
+        log::warn!("{}",$msg);
+        "".to_string()
+      },
+    }
+  };
+  {optional $key:expr, default: $default:expr, msg: $msg:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val.to_string(),
+      Err(_err) => {
+        log::info!("{}",$msg);
+        $default.to_string()
+      },
+    }
+  };
+  {optional $key:expr, msg: $msg:expr, default: $default:expr} => {
+    match std::env::var($key) {
+      Ok(val) => val.to_string(),
+      Err(_err) => {
+        log::info!("{}",$msg);
+        $default.to_string()
+      },
+    }
+  };
 }
 
 #[cfg(test)]
 mod tests {
-  fn init() {
-    let _ = env_logger::builder().is_test(true).try_init();
+  #[test]
+  fn get_optional_found() {
+    std::env::set_var("TEST_OPT_1", "VAL");
+    let result = env_var!(optional "TEST_OPT_1");
+    assert_eq!(result,"VAL");
   }
   #[test]
-  fn get_optional() {
-    std::env::set_var("TEST", "VAL");
-    let result = env_var!(optional "TEST");
+  fn get_optional_notfound() {
+    let result = env_var!(optional "TEST_OPT_2");
+    assert_eq!(result,"");
+  }
+  #[test]
+  fn get_optional_msg_found() {
+    std::env::set_var("TEST_OPT_3", "VAL");
+    let result = env_var!(optional "TEST_OPT_3", msg: "var not found");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_optional_msg_notfound() {
+    std::env::set_var("TEST_OPT_4", "VAL");
+    let result = env_var!(optional "TEST_OPT_4", msg: "var not found");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_optional_default_found() {
+    std::env::set_var("TEST_OPT_5", "VAL");
+    let result = env_var!(optional "TEST_OPT_5", default: "whatever");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_optional_default_notfound() {
+    let result = env_var!(optional "TEST_OPT_6", default: "whatever");
+    assert_eq!(result,"whatever");
+  }
+  #[test]
+  fn get_optional_default_msg_found() {
+    std::env::set_var("TEST_OPT_7", "VAL");
+    let result = env_var!(optional "TEST_OPT_7", default: "whatever", msg: "using default value");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_optional_default_msg_notfound() {
+    let result = env_var!(optional "TEST_OPT_8", default: "whatever", msg: "using default value");
+    assert_eq!(result,"whatever");
+  }
+  #[test]
+  fn get_optional_msg_default_found() {
+    std::env::set_var("TEST_OPT_9", "VAL");
+    let result = env_var!(optional "TEST_OPT_9", msg: "using default value", default: "whatever");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_optional_msg_default_notfound() {
+    let result = env_var!(optional "TEST_OPT_10", default: "whatever", msg: "using default value");
+    assert_eq!(result,"whatever");
+  }
+  #[test]
+  #[should_panic]
+  fn get_required_notfound() {
+    let _result = env_var!(required "NON_EXISTANT_VARIABLE");
+  }
+  #[test]
+  fn get_required_found() {
+    std::env::set_var("TEST_REQ_1", "VAL");
+    let result = env_var!(required "TEST_REQ_1");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_required_or_default_found() {
+    std::env::set_var("TEST_REQ_2", "VAL");
+    let result = env_var!(required "TEST_REQ_2", default: "WHATEVER");
+    assert_eq!(result,"VAL");
+  }
+  #[test]
+  fn get_required_or_default_notfound() {
+    let result = env_var!(required "TEST_REQ_3", default: "WHATEVER");
+    assert_eq!(result,"WHATEVER");
+  }
+
+  #[test]
+  fn get_required_msg_found() {
+    std::env::set_var("TEST_REQ_4", "VAL");
+    let result = env_var!(required "TEST_REQ_4", default: "value not found");
     assert_eq!(result,"VAL");
   }
   #[test]
   #[should_panic]
-  fn get_required_non_existent() {
-    init();
-    let _result = env_var!(required "NON_EXISTANT_VARIABLE");
+  fn get_required_msg_notfound() {
+    let _result = env_var!(required "TEST_REQ_5", msg: "value not found");
   }
-  #[test]
-  fn get_required() {
-    init();
-    std::env::set_var("TEST1", "VAL");
-    let result = env_var!(required "TEST1");
-    assert_eq!(result,"VAL");
-  }
-  #[test]
-  fn get_required_or_default_value() {
-    init();
-    std::env::set_var("TEST2", "VAL");
-    let result = env_var!(required "TEST2", default: "WHATEVER");
-    assert_eq!(result,"VAL");
-  }
-  #[test]
-  fn get_required_or_default_novalue() {
-    init();
-    let result = env_var!(required "TEST3", default: "WHATEVER");
-    assert_eq!(result,"WHATEVER");
-  }
-
 }

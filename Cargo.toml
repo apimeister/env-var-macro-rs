@@ -1,6 +1,6 @@
 [package]
 name = "env-var"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Jens Walter <jens@apimeister.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -10,6 +10,3 @@ description = "Macros providing easier access to environment variables in rust."
 
 [dependencies]
 log = "0.4"
-
-[dev-dependencies]
-env_logger = "0.8"
